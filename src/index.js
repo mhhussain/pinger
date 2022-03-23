@@ -72,7 +72,7 @@ const startup = async () => {
     })
   };
 
-  const int = setInterval(process, 3000);
+  const int = setInterval(process, configs.PROCESS_INTERVAL);
 };
 
 // ERRORS
