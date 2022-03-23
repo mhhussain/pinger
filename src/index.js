@@ -60,15 +60,18 @@ const startup = async () => {
 
     _.forEach(hosts, async (v) => {
       const hosturl = `http://${v.hostname}:${v.port}/${v.route}`;
-      logger.info(`Pinging host ${hosturl}`);
-      try {
-        const pingResponse = await axios.get(`http://${v.hostname}:${v.port}/${v.route}`);
-        logger.info(`Ping successful on host ${hosturl}`);
-        logger.info(`Ping incremented ${++INTERNAL_PING_COUNTER}`);
-      } catch {
-        logger.info(`Ping failed on host ${hosturl}`);
-      }
 
+      const rnd = Math.ceil(Math.random() * 100);
+      if (rnd > configs.RANDOM_PERCENT) {
+        logger.info(`Pinging host ${hosturl}`);
+        try {
+          const pingResponse = await axios.get(`http://${v.hostname}:${v.port}/${v.route}`);
+          logger.info(`Ping successful on host ${hosturl}`);
+          logger.info(`Ping incremented ${++INTERNAL_PING_COUNTER}`);
+        } catch {
+          logger.info(`Ping failed on host ${hosturl}`);
+        }
+      }
     })
   };
 
