@@ -20,12 +20,12 @@ app.use(e.json());
 // APP PING
 var INTERNAL_PING_COUNTER = 0;
 app.get('/ping', (req, res) => {
-  res.json({ count: ++INTERNAL_PING_COUNTER });
+  res.json({ count: INTERNAL_PING_COUNTER });
 });
 
 app.get('/ping/count', (req, res) => {
   res.json({ count: INTERNAL_PING_COUNTER });
-})
+});
 
 // STARTUP PROCESS
 const startup = async () => {
@@ -64,6 +64,7 @@ const startup = async () => {
       try {
         const pingResponse = await axios.get(`http://${v.hostname}:${v.port}/${v.route}`);
         logger.info(`Ping successful on host ${hosturl}`);
+        logger.info(`Ping incremented ${++INTERNAL_PING_COUNTER}`);
       } catch {
         logger.info(`Ping failed on host ${hosturl}`);
       }
