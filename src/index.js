@@ -18,28 +18,57 @@ app.use(morgan(configs.MORGAN_FORMAT));
 app.use(e.json());
 
 // APP PING
+var INTERNAL_PING_COUNTER = 0;
 app.get('/ping', (req, res) => {
-  res.json({ message: 'pong' });
+  res.json({ count: ++INTERNAL_PING_COUNTER });
 });
+
+app.get('/ping/count', (req, res) => {
+  res.json({ count: INTERNAL_PING_COUNTER });
+})
 
 // STARTUP PROCESS
 const startup = async () => {
   var i = 1;
+  INTERNAL_PING_COUNTER = 0;
   logger.info(`Running startup process`);
 
   const pingerRegistration = {
-    host: 'localhost',
-    port: 5002,
+    host: os.hostname(),
+    port: configs.PORT,
     route: 'ping',
   }
 
-  const reg = await axios.post(`http://localhost:5001/register`, { registration: pingerRegistration });
+  const coordinatorurl = `http://${configs.COORDINATOR_URL}:${configs.COORDINATOR_PORT}`;
+
+  const reg = await axios.post(`${coordinatorurl}/register`, { registration: pingerRegistration });
 
   // interval process
   const process = async () => {
     logger.info(`Running process [${i++}]`);
-    const res = await axios.get(`http://localhost:5001/map`);
-    console.log(res.data);
+    var { data: hosts } = await axios.get(`${coordinatorurl}/map`);
+    logger.info(`Retrieved new hosts list count [${hosts.length}]`);
+
+    if (hosts.length === 0) {
+      await axios.post(`${coordinatorurl}/register`, { registration: pingerRegistration });
+      logger.info(`Re-registering host`);
+
+      const { data } = await axios.get(`${coordinatorurl}/map`);
+      hosts = data;
+      logger.info(`Retrieved new hosts list count [${hosts.length}]`);
+    }
+
+    _.forEach(hosts, async (v) => {
+      const hosturl = `http://${v.hostname}:${v.port}/${v.route}`;
+      logger.info(`Pinging host ${hosturl}`);
+      try {
+        const pingResponse = await axios.get(`http://${v.hostname}:${v.port}/${v.route}`);
+        logger.info(`Ping successful on host ${hosturl}`);
+      } catch {
+        logger.info(`Ping failed on host ${hosturl}`);
+      }
+
+    })
   };
 
   const int = setInterval(process, 3000);
