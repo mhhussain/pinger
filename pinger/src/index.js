@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const fs = require('fs');
 const os = require('os');
 
 const _ = require('lodash');
@@ -27,36 +28,36 @@ app.get('/ping/count', (req, res) => {
   res.json({ count: INTERNAL_PING_COUNTER });
 });
 
+var CURRENT_MAP = {};
+app.get('/map', (req, res) => {
+  res.json(CURRENT_MAP);
+})
+
 // STARTUP PROCESS
 const startup = async () => {
   var i = 1;
   INTERNAL_PING_COUNTER = 0;
   logger.info(`Running startup process`);
 
-  const pingerRegistration = {
-    host: os.hostname(),
-    port: configs.PORT,
-    route: 'ping',
-  }
-
-  const coordinatorurl = `http://${configs.COORDINATOR_URL}:${configs.COORDINATOR_PORT}`;
-
-  const reg = await axios.post(`${coordinatorurl}/register`, { registration: pingerRegistration });
+  const kubernetesApi = `https://kubernetes.default.svc/api/v1/namespaces/${configs.NAMESPACE}`;
+  const authToken = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token', 'utf8');
 
   // interval process
   const process = async () => {
     logger.info(`Running process [${i++}]`);
-    var { data: hosts } = await axios.get(`${coordinatorurl}/map`);
+    var endpointHosts = await axios.get(
+      `${kubernetesApi}/endpoints`,
+      {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      }
+    );
+
+    CURRENT_MAP = _.filter(endpointHosts.data.items, (i) => { return i.metadata.name === 'pinger' });
+    var hosts = _.map(CURRENT_MAP[0].subsets[0].addresses, (a) => { return { hostname: a.ip, port: '5005', route: 'ping' } });
+
     logger.info(`Retrieved new hosts list count [${hosts.length}]`);
-
-    if (hosts.length === 0) {
-      await axios.post(`${coordinatorurl}/register`, { registration: pingerRegistration });
-      logger.info(`Re-registering host`);
-
-      const { data } = await axios.get(`${coordinatorurl}/map`);
-      hosts = data;
-      logger.info(`Retrieved new hosts list count [${hosts.length}]`);
-    }
 
     _.forEach(hosts, async (v) => {
       const hosturl = `http://${v.hostname}:${v.port}/${v.route}`;

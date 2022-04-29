@@ -1,0 +1,49 @@
+---
+## ping-coordinator
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinger
+spec:
+  type: ClusterIP
+  selector:
+    app: pinger
+  ports:
+  - port: 5005
+    targetPort: 5005
+
+---
+## pinger (d3)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinger-deployment
+  labels:
+    app: pinger
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: pinger
+  template:
+    metadata:
+      labels:
+        app: pinger
+    spec:
+      containers:
+      - name: pinger
+        image: moohh/pinger:v2
+        imagePullPolicy: Always
+        env:
+        - name: PORT
+          value: "5005"
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: "0"
+        - name: NAMESPACE
+          value: "mhussain"
+        - name: PROCESS_INTERVAL
+          value: "3000"
+        - name: RANDOM_PERCENT
+          value: "0"
+        ports:
+        - containerPort: 5005
