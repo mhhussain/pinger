@@ -1,1 +1,0 @@
-docker build -t moohh/ping-coordinator ../ping-coordinator

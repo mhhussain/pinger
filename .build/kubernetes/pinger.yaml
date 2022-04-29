@@ -1,45 +1,4 @@
 ---
-## ping-coordinator
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ping-coordinator-deployment
-  labels:
-    app: ping-coordinator
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ping-coordinator
-  template:
-    metadata:
-      labels:
-        app: ping-coordinator
-    spec:
-      containers:
-      - name: ping-coordinator
-        image: moohh/ping-coordinator:latest
-        env:
-        - name: PORT
-          value: "5001"
-        ports:
-        - containerPort: 5001
-
----
-## ping-coordinator
-apiVersion: v1
-kind: Service
-metadata:
-  name: ping-coordinator
-spec:
-  type: ClusterIP
-  selector:
-    app: ping-coordinator
-  ports:
-  - port: 5001
-    targetPort: 5001
-
----
 ## pinger (d3)
 apiVersion: apps/v1
 kind: Deployment
@@ -48,7 +7,7 @@ metadata:
   labels:
     app: pinger
 spec:
-  replicas: 3
+  replicas: 4
   selector:
     matchLabels:
       app: pinger
@@ -59,14 +18,15 @@ spec:
     spec:
       containers:
       - name: pinger
-        image: moohh/pinger:latest
+        image: moohh/pinger:v2
+        imagePullPolicy: Always
         env:
         - name: PORT
           value: "5005"
-        - name: COORDINATOR_URL
-          value: "ping-coordinator"
-        - name: COORDINATOR_PORT
-          value: "5001"
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: "0"
+        - name: NAMESPACE
+          value: "mhussain"
         - name: PROCESS_INTERVAL
           value: "3000"
         - name: RANDOM_PERCENT
