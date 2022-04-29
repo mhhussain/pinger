@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: pinger
-        image: moohh/pinger:v2
+        image: moohh/pinger
         imagePullPolicy: Always
         env:
         - name: PORT
