@@ -1,0 +1,49 @@
+version: '2'
+
+services:
+  ping-coordinator:
+    image: moohh/ping-coordinator
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: 5001
+  
+  pinger-1:
+    image: moohh/pinger
+    depends_on:
+      - ping-coordinator
+    ports:
+      - "5005:5005"
+    environment:
+      PORT: 5005
+      COORDINATOR_URL: ping-coordinator
+      COORDINATOR_PORT: 5001
+      PROCESS_INTERVAL: 1000
+      RANDOM_PERCENT: 20
+
+  pinger-2:
+    image: moohh/pinger
+    depends_on:
+      - ping-coordinator
+    ports:
+      - "5006:5006"
+    environment:
+      PORT: 5006
+      COORDINATOR_URL: ping-coordinator
+      COORDINATOR_PORT: 5001
+      PROCESS_INTERVAL: 3000
+      RANDOM_PERCENT: 0
+
+  pinger-3:
+    image: moohh/pinger
+    depends_on:
+      - ping-coordinator
+    ports:
+      - "5007:5007"
+    environment:
+      PORT: 5007
+      COORDINATOR_URL: ping-coordinator
+      COORDINATOR_PORT: 5001
+      PROCESS_INTERVAL: 100
+      RANDOM_PERCENT: 85
+    
