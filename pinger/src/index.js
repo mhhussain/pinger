@@ -54,10 +54,12 @@ const startup = async () => {
       }
     );
 
-    CURRENT_MAP = _.filter(endpointHosts.data.items, (i) => { return i.metadata.name === 'pinger' });
-    var hosts = _.map(CURRENT_MAP[0].subsets[0].addresses, (a) => { return { hostname: a.ip, port: '5005', route: 'ping' } });
+    var h = _.filter(endpointHosts.data.items, (i) => { return i.metadata.name === 'pinger' });
+    var hosts = _.map(h[0].subsets[0].addresses, (a) => { return { hostname: a.ip, port: '5005', route: 'ping' } });
 
     logger.info(`Retrieved new hosts list count [${hosts.length}]`);
+
+    CURRENT_MAP = hosts;
 
     _.forEach(hosts, async (v) => {
       const hosturl = `http://${v.hostname}:${v.port}/${v.route}`;

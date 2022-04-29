@@ -1,4 +1,19 @@
 ---
+## pinger service
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinger
+spec:
+  type: ClusterIP
+  selector:
+    app: pinger
+  ports:
+  - port: 5005
+    targetPort: 5005
+
+
+---
 ## pinger (d3)
 apiVersion: apps/v1
 kind: Deployment
@@ -18,7 +33,7 @@ spec:
     spec:
       containers:
       - name: pinger
-        image: moohh/pinger
+        image: moohh/pinger:v2
         imagePullPolicy: Always
         env:
         - name: PORT
