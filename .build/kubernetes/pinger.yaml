@@ -22,7 +22,7 @@ metadata:
   labels:
     app: pinger
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
       app: pinger
@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: pinger
-        image: moohh/pinger:v2
+        image: moohh/pinger
         imagePullPolicy: Always
         env:
         - name: PORT
